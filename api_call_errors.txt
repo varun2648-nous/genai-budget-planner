@@ -1,2 +1,16 @@
 
 
+[2026-03-11T18:02:14.855Z]
+provider=local
+model=nomic-embed-text
+operation=createLocalEmbeddings
+code=OLLAMA_UNREACHABLE
+message=Could not reach Ollama embeddings at http://localhost:11434. Make sure Ollama is running and "nomic-embed-text" is installed.
+
+[2026-03-11T18:02:14.858Z]
+provider=openrouter
+model=nomic-ai/nomic-embed-text-v1.5
+operation=createRemoteEmbeddings
+code=OPENROUTER_API_KEY_MISSING
+message=OpenRouter API key is missing. Add OPENROUTER_API_KEY in the backend .env file.
+

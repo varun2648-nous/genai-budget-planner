@@ -1,4 +1,9 @@
-const { formatProviderError, generateText, getProviderStatuses } = require("../services/aiProviderService");
+const {
+  formatProviderError,
+  generateText,
+  getProviderDebugStatuses,
+  getProviderStatuses
+} = require("../services/aiProviderService");
 const { answerWithRag } = require("../services/ragService");
 const { buildGeneralChatPrompt } = require("../services/reportPromptService");
 
@@ -31,6 +36,11 @@ async function providerStatus(_req, res) {
   return res.json(data);
 }
 
+async function providerDebugStatus(_req, res) {
+  const data = await getProviderDebugStatuses();
+  return res.json(data);
+}
+
 async function ragAssistant(req, res) {
   const message = String(req.body?.message || "").trim();
   const attachedReportId = req.body?.attached_report_id || req.body?.report_id || null;
@@ -59,6 +69,7 @@ async function ragAssistant(req, res) {
 
 module.exports = {
   chatAssistant,
+  providerDebugStatus,
   providerStatus,
   ragAssistant
 };

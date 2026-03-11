@@ -1,4 +1,4 @@
-const { createRemoteEmbeddings } = require("./aiProviderService");
+const { createLocalEmbeddings, createRemoteEmbeddings } = require("./aiProviderService");
 const { asNumber } = require("./reportServiceUtils");
 
 const FALLBACK_DIMENSION = asNumber(process.env.FALLBACK_EMBED_DIM || 256) || 256;
@@ -7,13 +7,17 @@ async function createEmbeddings(texts) {
   const safeTexts = Array.isArray(texts) ? texts : [];
 
   try {
-    return await createRemoteEmbeddings(safeTexts);
-  } catch (_error) {
-    return {
-      embeddings: safeTexts.map((text) => makeFallbackEmbedding(text, FALLBACK_DIMENSION)),
-      provider: "deterministic-fallback",
-      model: "hash-embedding"
-    };
+    return await createLocalEmbeddings(safeTexts);
+  } catch (_localError) {
+    try {
+      return await createRemoteEmbeddings(safeTexts);
+    } catch (_remoteError) {
+      return {
+        embeddings: safeTexts.map((text) => makeFallbackEmbedding(text, FALLBACK_DIMENSION)),
+        provider: "deterministic-fallback",
+        model: "hash-embedding"
+      };
+    }
   }
 }
 
