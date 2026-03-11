@@ -1,38 +1,25 @@
-const axios = require("axios");
+const { createRemoteEmbeddings } = require("./aiProviderService");
 const { asNumber } = require("./reportServiceUtils");
 
-const OLLAMA_URL = process.env.OLLAMA_URL || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-const OLLAMA_EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
 const FALLBACK_DIMENSION = asNumber(process.env.FALLBACK_EMBED_DIM || 256) || 256;
-const EMBED_TIMEOUT_MS = asNumber(process.env.EMBED_TIMEOUT_MS || 15000) || 15000;
 
-let embeddingUnavailable = false;
-
-async function createEmbedding(text) {
-  if (embeddingUnavailable) {
-    return makeFallbackEmbedding(text, FALLBACK_DIMENSION);
-  }
+async function createEmbeddings(texts) {
+  const safeTexts = Array.isArray(texts) ? texts : [];
 
   try {
-    const response = await axios.post(
-      `${OLLAMA_URL}/api/embeddings`,
-      {
-        model: OLLAMA_EMBED_MODEL,
-        prompt: text
-      },
-      { timeout: EMBED_TIMEOUT_MS }
-    );
-
-    const embedding = response.data?.embedding;
-    if (!Array.isArray(embedding) || embedding.length === 0) {
-      throw new Error("Invalid embedding response from Ollama");
-    }
-
-    return embedding;
+    return await createRemoteEmbeddings(safeTexts);
   } catch (_error) {
-    embeddingUnavailable = true;
-    return makeFallbackEmbedding(text, FALLBACK_DIMENSION);
+    return {
+      embeddings: safeTexts.map((text) => makeFallbackEmbedding(text, FALLBACK_DIMENSION)),
+      provider: "deterministic-fallback",
+      model: "hash-embedding"
+    };
   }
+}
+
+async function createEmbedding(text) {
+  const result = await createEmbeddings([text]);
+  return result.embeddings[0];
 }
 
 function makeFallbackEmbedding(text, dimension) {
@@ -58,5 +45,6 @@ function makeFallbackEmbedding(text, dimension) {
 }
 
 module.exports = {
-  createEmbedding
+  createEmbedding,
+  createEmbeddings
 };

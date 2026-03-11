@@ -72,12 +72,30 @@ function ReportViewer({ report }) {
   const recommendations = report.ai_recommendations
     ? report.ai_recommendations.split("\n").map((line) => line.trim()).filter(Boolean)
     : [];
+  const aiSummaryLines = String(report.ai_summary || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const summaryStatusLabel = report.ai_summary_status === "failed"
+    ? "Summary unavailable"
+    : report.ai_summary_status === "ready"
+      ? "Summary ready"
+      : "Generating summary";
+  const ragStatusLabel = report.index_status === "failed"
+    ? "AI chat unavailable"
+    : report.index_status === "ready"
+      ? "Ready for AI chat"
+      : "Preparing AI chat knowledge base";
 
   return (
     <section className="card report-card">
       <div className="section-header">
         <h2>{report.report_name || "Report Details"}</h2>
         <span className="badge">{report.month} {report.year}</span>
+      </div>
+      <div className="report-status-row">
+        <span className="badge">{summaryStatusLabel}</span>
+        <span className="badge">{ragStatusLabel}</span>
       </div>
 
       <div className="report-grid report-grid-compact">
@@ -196,7 +214,19 @@ function ReportViewer({ report }) {
 
       <div className="ai-summary">
         <h3>AI Summary</h3>
-        <p>{report.ai_summary || "AI summary not available yet."}</p>
+        {report.ai_summary ? (
+          <div className="ai-advice">
+            {aiSummaryLines.map((line, index) => (
+              <div key={`${line}-${index}`}>{line}</div>
+            ))}
+          </div>
+        ) : (
+          <p>
+            {report.ai_summary_status === "failed"
+              ? (report.ai_summary_error || "AI summary could not be generated for this report.")
+              : "AI summary is being generated in the background."}
+          </p>
+        )}
         {recommendations.length > 0 && (
           <div>
             <h4>Key Recommendations</h4>

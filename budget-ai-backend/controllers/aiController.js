@@ -1,6 +1,6 @@
-const { generateGeminiAdvice } = require("../services/geminiService");
-const { generateLocalResponse } = require("../services/localLlmService");
+const { formatProviderError, generateText, getProviderStatuses } = require("../services/aiProviderService");
 const { answerWithRag } = require("../services/ragService");
+const { buildGeneralChatPrompt } = require("../services/reportPromptService");
 
 async function chatAssistant(req, res) {
   const message = String(req.body?.message || "").trim();
@@ -10,32 +10,25 @@ async function chatAssistant(req, res) {
     return res.status(400).json({ message: "message is required" });
   }
 
-  const prompt = `You are an AI budget assistant. Answer the user question clearly and briefly.\n\nUser question: ${message}`;
   let response;
 
-  const normalized = String(model || "gemini").toLowerCase();
-
-  if (normalized === "local" || normalized === "ollama" || normalized === "llama") {
-    try {
-      response = await generateLocalResponse(prompt, { temperature: 0.3, top_p: 0.9 });
-    } catch (_error) {
-      response = null;
-    }
-  }
-
-  if (!response) {
-    try {
-      response = await generateGeminiAdvice(prompt);
-    } catch (_error) {
-      try {
-        response = await generateLocalResponse(prompt, { temperature: 0.3, top_p: 0.9 });
-      } catch (_innerError) {
-        response = "AI assistant is temporarily unavailable. Please try again in a moment.";
-      }
-    }
+  try {
+    const result = await generateText({
+      modelChoice: model,
+      prompt: buildGeneralChatPrompt(message),
+      temperature: 0.3
+    });
+    response = result.text;
+  } catch (error) {
+    response = formatProviderError(error, model);
   }
 
   return res.json({ response });
+}
+
+async function providerStatus(_req, res) {
+  const data = await getProviderStatuses();
+  return res.json(data);
 }
 
 async function ragAssistant(req, res) {
@@ -56,13 +49,16 @@ async function ragAssistant(req, res) {
     attachedYear,
     model
   });
+
   if (attachedReportId && result?.error === "REPORT_NOT_INDEXED") {
     return res.status(409).json(result);
   }
+
   return res.json(result);
 }
 
 module.exports = {
   chatAssistant,
+  providerStatus,
   ragAssistant
 };

@@ -47,6 +47,12 @@ async function initDatabase() {
       discretionary_ratio DECIMAL(5,2),
       ai_summary TEXT,
       ai_recommendations TEXT,
+      ai_summary_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      ai_summary_error TEXT NULL,
+      index_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      index_error TEXT NULL,
+      llm_provider VARCHAR(50) NULL,
+      embedding_provider VARCHAR(50) NULL,
       input_json TEXT NULL,
       metrics_json JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -54,7 +60,31 @@ async function initDatabase() {
     ) ENGINE=InnoDB
   `);
 
+  await ensureColumn(pool, "reports", "ai_summary_status", "VARCHAR(20) NOT NULL DEFAULT 'pending'");
+  await ensureColumn(pool, "reports", "ai_summary_error", "TEXT NULL");
+  await ensureColumn(pool, "reports", "index_status", "VARCHAR(20) NOT NULL DEFAULT 'pending'");
+  await ensureColumn(pool, "reports", "index_error", "TEXT NULL");
+  await ensureColumn(pool, "reports", "llm_provider", "VARCHAR(50) NULL");
+  await ensureColumn(pool, "reports", "embedding_provider", "VARCHAR(50) NULL");
+
   return pool;
+}
+
+async function ensureColumn(pool, tableName, columnName, definition) {
+  const [rows] = await pool.execute(
+    `SELECT COUNT(*) AS total
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [DB_NAME, tableName, columnName]
+  );
+
+  if (Number(rows?.[0]?.total || 0) > 0) {
+    return;
+  }
+
+  await pool.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`);
 }
 
 function getPool() {

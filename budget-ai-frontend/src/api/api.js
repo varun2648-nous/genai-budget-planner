@@ -37,4 +37,9 @@ export async function ragAi(payload) {
   return data;
 }
 
+export async function fetchProviderStatuses() {
+  const { data } = await api.get("/api/ai/providers/status");
+  return data;
+}
+
 export default api;

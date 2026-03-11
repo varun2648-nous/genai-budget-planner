@@ -199,11 +199,12 @@ module.exports = {
   deleteDocuments
 };
 
-async function deleteDocuments({ ids }) {
+async function deleteDocuments({ ids, where }) {
   const collection = await ensureCollection();
   const basePath = `/api/v2/tenants/${encodeURIComponent(CHROMA_TENANT)}/databases/${encodeURIComponent(CHROMA_DATABASE)}`;
 
   await client.post(`${basePath}/collections/${encodeURIComponent(collection.id)}/delete`, {
-    ids
+    ...(ids ? { ids } : {}),
+    ...(where ? { where } : {})
   });
 }

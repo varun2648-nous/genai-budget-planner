@@ -1,21 +1,33 @@
 import { useMemo, useState } from "react";
 import { ragAi } from "../api/api";
 
-function AIAssistantChat({ reports = [] }) {
+function AIAssistantChat({ reports = [], selectedReport = null }) {
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState("gemini");
   const [attachedReportId, setAttachedReportId] = useState("");
 
-  const reportOptions = useMemo(() => reports.map((report) => ({
-    id: report.id,
-    label: report.report_name || `${report.month} ${report.year} Report ${report.report_index}`,
-    month: report.month,
-    year: report.year
-  })), [reports]);
+  const reportOptions = useMemo(() => reports
+    .filter((report) => report.ready_for_chat)
+    .map((report) => ({
+      id: report.id,
+      label: report.report_name || `${report.month} ${report.year} Report ${report.report_index}`,
+      month: report.month,
+      year: report.year
+    })), [reports]);
+
+  const pendingCount = useMemo(
+    () => reports.filter((report) => report.index_status === "pending" || report.index_status === "processing").length,
+    [reports]
+  );
 
   const attachedReport = reportOptions.find((option) => String(option.id) === String(attachedReportId)) || null;
+  const preparationLabel = selectedReport && !selectedReport.ready_for_chat
+    ? (selectedReport.index_status === "failed" ? "Report knowledge base failed" : "Preparing selected report for AI chat")
+    : pendingCount > 0
+      ? `${pendingCount} report${pendingCount > 1 ? "s are" : " is"} being prepared`
+      : "Report knowledge base ready";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -39,7 +51,7 @@ function AIAssistantChat({ reports = [] }) {
       const isTimeout = _error?.code === "ECONNABORTED" || message.includes("timeout");
       setResponse(isTimeout
         ? "The AI model is taking longer than expected. Please try again in a moment."
-        : "AI assistant is unavailable right now.");
+        : "LLM responded with an error");
     } finally {
       setLoading(false);
     }
@@ -70,6 +82,17 @@ function AIAssistantChat({ reports = [] }) {
               <input
                 type="radio"
                 name="chat-model"
+                value="openrouter"
+                checked={model === "openrouter"}
+                onChange={() => setModel("openrouter")}
+                disabled={loading}
+              />
+              OpenRouter
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="chat-model"
                 value="local"
                 checked={model === "local"}
                 onChange={() => setModel("local")}
@@ -92,8 +115,15 @@ function AIAssistantChat({ reports = [] }) {
               <option key={report.id} value={report.id}>{report.label}</option>
             ))}
           </select>
+          {reportOptions.length === 0 && (
+            <p className="muted">Reports appear here only after chunking, embedding, and storage finish.</p>
+          )}
         </div>
       </div>
+
+      <button type="button" className="ghost-button status-pill" disabled>
+        {preparationLabel}
+      </button>
 
       <form className="chat-input" onSubmit={handleSubmit}>
         <textarea
@@ -111,7 +141,7 @@ function AIAssistantChat({ reports = [] }) {
       {response && (
         <div className="chat-response">
           <h4>Response</h4>
-          <p>{response}</p>
+          <div className="ai-advice">{response}</div>
         </div>
       )}
     </section>

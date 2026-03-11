@@ -26,7 +26,7 @@ function Home() {
     try {
       const data = await fetchReports();
       setReports(data || []);
-    } catch (_error) {
+    } catch {
       setError("Unable to load report history. Verify the backend is running on http://localhost:8000.");
     } finally {
       setHistoryLoading(false);
@@ -36,6 +36,30 @@ function Home() {
   useEffect(() => {
     loadReports();
   }, []);
+
+  useEffect(() => {
+    if (!selectedReport?.id) return undefined;
+    const summaryTerminal = ["ready", "failed"].includes(selectedReport.ai_summary_status);
+    const indexTerminal = ["ready", "failed"].includes(selectedReport.index_status);
+    if (summaryTerminal && indexTerminal) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(async () => {
+      try {
+        const [report, reportList] = await Promise.all([
+          fetchReport(selectedReport.id),
+          fetchReports()
+        ]);
+        setSelectedReport(report);
+        setReports(reportList || []);
+      } catch {
+        // Silent polling failure; the next cycle can recover.
+      }
+    }, 3500);
+
+    return () => window.clearInterval(timer);
+  }, [selectedReport?.id, selectedReport?.index_status, selectedReport?.ai_summary_status]);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
@@ -50,7 +74,7 @@ function Home() {
       const isTimeout = err?.code === "ECONNABORTED" || message.includes("timeout");
       setError(isTimeout
         ? "Report generation is taking longer than expected. Please try again in a moment."
-        : (err?.response?.data?.message || "Unable to generate report right now."));
+        : "LLM responded with an error");
     } finally {
       setLoading(false);
     }
@@ -61,7 +85,7 @@ function Home() {
     try {
       const report = await fetchReport(reportId);
       setSelectedReport(report);
-    } catch (_error) {
+    } catch {
       setError("Unable to load the selected report.");
     }
   };
@@ -78,7 +102,7 @@ function Home() {
         setSelectedReport(null);
       }
       await loadReports();
-    } catch (_error) {
+    } catch {
       setError("Unable to delete the selected report.");
     }
   };
@@ -108,7 +132,7 @@ function Home() {
             onDelete={handleDeleteReport}
             loading={historyLoading}
           />
-          <AIAssistantChat reports={reports} />
+          <AIAssistantChat reports={reports} selectedReport={selectedReport} />
         </div>
       </div>
     </div>

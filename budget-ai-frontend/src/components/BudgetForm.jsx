@@ -150,15 +150,25 @@ function BudgetForm({ onSubmit, loading = false, reportCounts = {} }) {
           <input
             type="radio"
             name="model"
+            value="openrouter"
+            checked={formData.model === "openrouter"}
+            onChange={handleTopLevelChange}
+            disabled={loading}
+          />
+          OpenRouter
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="model"
             value="local"
             checked={formData.model === "local"}
             onChange={handleTopLevelChange}
             disabled={loading}
           />
-          Local LLM (Ollama)
+          Local LLM
         </label>
       </div>
-
       <h2>Budget Period</h2>
       <div className="grid-2">
         <div>
@@ -219,6 +229,7 @@ function BudgetForm({ onSubmit, loading = false, reportCounts = {} }) {
         placeholder="e.g. 85000"
         value={formData.monthlyIncome}
         onChange={handleTopLevelChange}
+        onWheel={(event) => event.currentTarget.blur()}
         required
         disabled={loading}
       />
@@ -241,6 +252,7 @@ function BudgetForm({ onSubmit, loading = false, reportCounts = {} }) {
                 onChange={(event) =>
                   handleExpenseChange("fixedExpenses", field.key, event.target.value)
                 }
+                onWheel={(event) => event.currentTarget.blur()}
                 disabled={loading}
               />
             </div>
@@ -264,6 +276,7 @@ function BudgetForm({ onSubmit, loading = false, reportCounts = {} }) {
                 onChange={(event) =>
                   handleExpenseChange("variableExpenses", field.key, event.target.value)
                 }
+                onWheel={(event) => event.currentTarget.blur()}
                 disabled={loading}
               />
             </div>
@@ -284,6 +297,7 @@ function BudgetForm({ onSubmit, loading = false, reportCounts = {} }) {
         placeholder="e.g. 15000"
         value={formData.savingsGoal}
         onChange={handleTopLevelChange}
+        onWheel={(event) => event.currentTarget.blur()}
         disabled={loading}
       />
 
