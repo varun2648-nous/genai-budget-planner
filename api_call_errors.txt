@@ -14,3 +14,38 @@ operation=createRemoteEmbeddings
 code=OPENROUTER_API_KEY_MISSING
 message=OpenRouter API key is missing. Add OPENROUTER_API_KEY in the backend .env file.
 
+[2026-03-11T18:13:08.432Z]
+provider=openrouter
+model=openai/gpt-oss-120b
+operation=generateText
+code=EPROTO
+message=write EPROTO BC3A0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:openssl\ssl\record\rec_layer_s3.c:916:SSL alert number 40 
+
+[2026-03-11T18:13:20.129Z]
+provider=gemini
+model=gemini-1.5-flash
+operation=generateText
+code=none
+message=[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+
+[2026-03-12T03:40:59.100Z]
+provider=gemini
+model=gemini-1.5-flash
+operation=generateText
+code=none
+message=[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+
+[2026-03-12T06:01:25.285Z]
+provider=gemini
+model=gemini-1.5-flash
+operation=generateText
+code=none
+message=[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+
+[2026-03-12T06:17:13.309Z]
+provider=openrouter
+model=openai/gpt-oss-120b
+operation=generateText
+code=EPROTO
+message=write EPROTO 4C3B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:openssl\ssl\record\rec_layer_s3.c:916:SSL alert number 40 
+
